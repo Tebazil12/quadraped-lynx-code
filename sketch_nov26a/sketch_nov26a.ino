@@ -207,20 +207,21 @@ void loop() {
 //  delay(1000);
 
 //  enum legLocations legToMove = frontLeft;
-  int timeToTake = 1000;
+  int timeToTake = 250;
+  int timeAllowance = 100;
   
   /*Acheive diagram 2 position*/
   String cmd = getLegCommand(frontRight, upSide, timeToTake);
   Serial.println(cmd); SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
   
   cmd = getLegCommand(frontRight, upExtend, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(frontRight, extended, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
   
   /* Acheive diagram 3 position*/
   cmd =       getLegCommand(frontRight, middle, timeToTake);
@@ -228,33 +229,33 @@ void loop() {
   cmd = cmd + getLegCommand(backRight, middle, timeToTake);
   cmd = cmd + getLegCommand(backLeft, extended, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   /* diagram 4 */ 
   cmd = getLegCommand(backLeft, upExtend, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);  
+  delay(timeToTake + timeAllowance);  
 
   cmd = getLegCommand(backLeft, upSide, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(backLeft, side, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   /* 5 */
   cmd = getLegCommand(frontLeft, upSide, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(frontLeft, upExtend, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(frontLeft, extended, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   /* 6 */
   cmd =       getLegCommand(frontRight, side, timeToTake);
@@ -262,20 +263,20 @@ void loop() {
   cmd = cmd + getLegCommand(backRight, extended, timeToTake);
   cmd = cmd + getLegCommand(backLeft, middle, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   /* 1 */
   cmd = getLegCommand(backRight, upExtend, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(backRight, upSide, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
 
   cmd = getLegCommand(backRight, side, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
-  delay(timeToTake + 1000);
+  delay(timeToTake + timeAllowance);
   
   
 //  SSCSerial.println("#8 P1500 #9 P1500 #10 P1600 T500");
