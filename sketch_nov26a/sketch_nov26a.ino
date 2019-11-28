@@ -128,17 +128,17 @@ String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTa
       break; 
     case upExtend:
       hipAngle = 100;
-      kneeAngle = 100;
+      kneeAngle = 200;
       ankleAngle = -300;
       break;
     case upMiddle:
       hipAngle = 0;
-      kneeAngle = 100;
+      kneeAngle = 200;
       ankleAngle = 0;
       break;   
     case upSide: 
       hipAngle = -500;
-      kneeAngle = 100;
+      kneeAngle = 200;
       ankleAngle = 0;
       break;              
   }
@@ -265,7 +265,7 @@ void loop() {
   delay(timeToTake + 1000);
 
   /* 1 */
-  cmd = getLegCommand(backRight, upExtened, timeToTake);
+  cmd = getLegCommand(backRight, upExtend, timeToTake);
   Serial.println(cmd);SSCSerial.println(cmd);
   delay(timeToTake + 1000);
 
