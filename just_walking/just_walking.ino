@@ -191,9 +191,6 @@ void setup() {
  * MAIN 
  ********************************/
 void loop() {
-    while(!Serial.available()){} // waiting
-    String msg = Serial.readString();
-    
     
 //  int nMotors = 4;
 //  int motorNumbers[nMotors] = {0, 1, 2, 8, 9, 10, 16, 17, 18, 24, 25, 26};
