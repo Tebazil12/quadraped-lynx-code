@@ -191,7 +191,10 @@ void setup() {
  * MAIN 
  ********************************/
 void loop() {
-
+    while(!Serial.available()){} // waiting
+    String msg = Serial.readString();
+    
+    Serial.println(msg);
 //  int nMotors = 4;
 //  int motorNumbers[nMotors] = {0, 1, 2, 8, 9, 10, 16, 17, 18, 24, 25, 26};
 //  int motorNumbers[nMotors] = {1, 2, 9, 10, 17, 18, 25, 26};
@@ -207,7 +210,7 @@ void loop() {
 //  delay(1000);
 
 //  enum legLocations legToMove = frontLeft;
-  int timeToTake = 250;
+  int timeToTake = 700;
   int timeAllowance = 100;
   
   /*Acheive diagram 2 position*/
