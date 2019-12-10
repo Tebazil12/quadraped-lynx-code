@@ -275,9 +275,9 @@ void setup() {
 void loop() {
 
   int timeToTake = 700;
-  int timeAllowance = 1000;
+  int timeAllowance = 200;
   
-  acheivePose("Pose 01\n", timeToTake, timeAllowance, false);
+//  acheivePose("Pose 01\n", timeToTake, timeAllowance, false);
   
   while(!Serial.available()){} // waiting
   String msg = Serial.readString();
