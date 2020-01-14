@@ -107,6 +107,7 @@ void moveServosToSame(int servoNumbers[], int nServos, int movement, int timeTak
 }
 
 String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTaken){  
+  // in theory 1000ms == 90deg
   int hipAngle;
   int kneeAngle;
   int ankleAngle;
@@ -171,7 +172,8 @@ void startPosition(){
 /** Note, timeToTake is not overall time, but time per leg command */
 void acheivePose(String poseName, int timeToTake, int timeAllowance, bool responseOn)
 {
-  if(poseName == "Pose 01\n")
+  //if(poseName == "Pose 01\n")
+  if(poseName == "BR_leg_forward\n")
   {
     /* Acheive diagram 1 */
     String cmd =getLegCommand(frontLeft, middle, 1000);
@@ -182,7 +184,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance); 
     if (responseOn) Serial.println("Acheived");
   } 
-  else if (poseName == "Pose 02\n")
+  else if (poseName == "FR_leg_forward\n")
   {
     /*Acheive diagram 2 position*/
     String cmd = getLegCommand(frontRight, upSide, timeToTake);
@@ -198,7 +200,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
   } 
-  else if (poseName == "Pose 03\n")
+  else if (poseName == "FRf_body_forward\n")
   {
     /* Acheive diagram 3 position*/
     String cmd =       getLegCommand(frontRight, middle, timeToTake);
@@ -209,7 +211,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
   } 
-  else if (poseName == "Pose 04\n")
+  else if (poseName == "BL_leg_forward\n")
   {
     /* diagram 4 */ 
     String cmd = getLegCommand(backLeft, upExtend, timeToTake);
@@ -225,7 +227,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance); 
     if (responseOn) Serial.println("Acheived");
   } 
-  else if (poseName == "Pose 05\n")
+  else if (poseName == "FL_leg_forward\n")
   {
     /* 5 */
     String cmd = getLegCommand(frontLeft, upSide, timeToTake);
@@ -241,7 +243,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);  
     if (responseOn) Serial.println("Acheived");
   } 
-  else if (poseName == "Pose 06\n")
+  else if (poseName == "FLf_body_forward\n")
   {
     /* 6 */
     String cmd =getLegCommand(frontRight, side, timeToTake);
