@@ -175,7 +175,31 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
   //if(poseName == "Pose 01\n")
   if(poseName == "BR_leg_forward\n")
   {
-    /* Acheive diagram 1 */
+//    /* Acheive diagram 1 */
+//    String cmd =getLegCommand(frontLeft, middle, 1000);
+//    cmd = cmd + getLegCommand(backLeft, middle, 1000);
+//    cmd = cmd + getLegCommand(frontRight, side, 1000);
+//    cmd = cmd + getLegCommand(backRight, side, 1000);
+//    /* Serial.println(cmd);*/ SSCSerial.println(cmd);    
+//    delay(timeToTake + timeAllowance); 
+//    if (responseOn) Serial.println("Acheived");
+
+    String cmd = getLegCommand(backRight, upExtend, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);  
+    
+    cmd = getLegCommand(backRight, upSide, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    
+    cmd = getLegCommand(backRight, side, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance); 
+    if (responseOn) Serial.println("Acheived");
+  } 
+  else if (poseName == "start_pose\n")
+  {
+        /* Acheive diagram 1 */
     String cmd =getLegCommand(frontLeft, middle, 1000);
     cmd = cmd + getLegCommand(backLeft, middle, 1000);
     cmd = cmd + getLegCommand(frontRight, side, 1000);
@@ -183,7 +207,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     /* Serial.println(cmd);*/ SSCSerial.println(cmd);    
     delay(timeToTake + timeAllowance); 
     if (responseOn) Serial.println("Acheived");
-  } 
+  }
   else if (poseName == "FR_leg_forward\n")
   {
     /*Acheive diagram 2 position*/
