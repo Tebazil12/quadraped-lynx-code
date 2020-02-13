@@ -166,7 +166,7 @@ String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTa
 
 String getLegCommandHipRotate(enum legLocations legNum, enum legPoses poseNum, int hipAngleOffset, int timeTaken){  
   // in theory 1000ms == 90deg
-  hipPwmOffset = (hipAngleOffset*1000)/90; //note this is int maths, not nice float, bit of a bodge
+  int hipPwmOffset = float(hipAngleOffset)*float(float(50)/float(4.5)); //note this is int maths, not nice float, bit of a bodge. NB max int val ~32,000
   
   int hipAngle;
   int kneeAngle;
@@ -232,21 +232,35 @@ void startPosition(){
 /** Note, timeToTake is not overall time, but time per leg command */
 void acheivePose(String poseName, int timeToTake, int timeAllowance, bool responseOn)
 {
-  if(poseName.substring(5) == "rotateHip\n") // NB for extended pose only atm 
-  // Should be: poseName == "xx_BR_rotateHip\n" //will starting with xx cause type errors?
+  if(poseName.indexOf("rotateHip") != -1) // NB for extended pose only atm 
+  // Should be: poseName == "+xx_BR_rotateHip\n" //will starting with xx cause type errors?
   {
-    if(poseName.substring(3,4) == "BR"){
-      number = poseName.substring(0,1).toInt(); //number will be in deg, needs converting to pwm
-      String cmd = getLegCommandHipRotate(backRight, upExtend, number, timeToTake);
-      /* Serial.println(cmd);*/SSCSerial.println(cmd);
-      delay(timeToTake + timeAllowance);  
-
-      String cmd = getLegCommandHipRotate(backRight, extended, number, timeToTake);
-      /* Serial.println(cmd);*/SSCSerial.println(cmd);
-      delay(timeToTake + timeAllowance);
+    enum legLocations selectedLeg;
+    if(poseName.indexOf("BR") != -1){ //probably inef. use single func call and var assg instead...
+      selectedLeg = backRight;
+    } else if (poseName.indexOf("BL") != -1){
+      selectedLeg = backLeft;
+    } else if (poseName.indexOf("FR") != -1){
+      selectedLeg = frontRight;
+    } else if (poseName.indexOf("FL") != -1){
+      selectedLeg = frontLeft;
+    }else{
+      /* Serial.println(cmd);*/SSCSerial.println("ERROR Leg not identified in command");
     }
+    String numberAsString = poseName.substring(0,3); //number will be in deg, converted to pwm in getLegCommandHipRotate
+//    Serial.println(numberAsString);
+    int number = numberAsString.toInt();
+    String cmd = getLegCommandHipRotate(selectedLeg, upExtend, number, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);  
+
+    cmd = getLegCommandHipRotate(selectedLeg, extended, number, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    if (responseOn) Serial.println("Acheived");
+
   }
-    elseif(poseName == "BR_leg_forward\n")
+    else if(poseName == "BR_leg_forward\n")
   {
 //    /* Acheive diagram 1 */
 //    String cmd =getLegCommand(frontLeft, middle, 1000);
@@ -289,6 +303,22 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);
     
     cmd = getLegCommand(frontRight, upExtend, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    
+    cmd = getLegCommand(frontRight, extended, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    if (responseOn) Serial.println("Acheived");
+  } 
+  else if (poseName == "FR_leg_forward_tap\n")
+  {
+    /*Acheive diagram 2 position*/
+//    String cmd = getLegCommand(frontRight, upSide, timeToTake);
+//    /* Serial.println(cmd);*/ SSCSerial.println(cmd);
+//    delay(timeToTake + timeAllowance);
+    
+    String cmd = getLegCommand(frontRight, upExtend, timeToTake);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);
     
@@ -352,7 +382,8 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     if (responseOn) Serial.println("Acheived");
   }
   else{
-    if (responseOn) Serial.println("Error unknown pose name");
+    String errorMsg = "Error unknown pose name: " + poseName;
+    if (responseOn) Serial.println(errorMsg);
   }
 }
 
