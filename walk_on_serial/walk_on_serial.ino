@@ -164,6 +164,66 @@ String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTa
   
 }
 
+String getLegCommandHipRotate(enum legLocations legNum, enum legPoses poseNum, int hipAngleOffset, int timeTaken){  
+  // in theory 1000ms == 90deg
+  hipPwmOffset = (hipAngleOffset*1000)/90; //note this is int maths, not nice float, bit of a bodge
+  
+  int hipAngle;
+  int kneeAngle;
+  int ankleAngle;
+  switch (poseNum) {
+    case extended:
+      hipAngle = 100 + hipPwmOffset;
+      kneeAngle = -100;
+      ankleAngle = -300;
+      break;
+    case middle:
+      hipAngle = 0 + hipPwmOffset;
+      kneeAngle = 0;
+      ankleAngle = 0;
+      break;
+    case side: 
+      hipAngle = -500 + hipPwmOffset;
+      kneeAngle = 0;
+      ankleAngle = 0;
+      break; 
+    case upExtend:
+      hipAngle = 100 + hipPwmOffset;
+      kneeAngle = 200;
+      ankleAngle = -300;
+      break;
+    case upMiddle:
+      hipAngle = 0 + hipPwmOffset;
+      kneeAngle = 200;
+      ankleAngle = 0;
+      break;   
+    case upSide: 
+      hipAngle = -500 + hipPwmOffset;
+      kneeAngle = 200;
+      ankleAngle = 0;
+      break;              
+  }
+  String comdToSend="";
+  switch (legNum) {
+    case frontLeft:
+      comdToSend = comdToSend+" #24P"+ convToRawVals(24,hipAngle) + " #25P" + convToRawVals(25,kneeAngle) + " #26P" + convToRawVals(26,ankleAngle);
+      break;
+    case frontRight:
+      comdToSend = comdToSend+" #8P"+  convToRawVals(8,hipAngle) + " #9P" +   convToRawVals(9,kneeAngle) + " #10P" +  convToRawVals(10,ankleAngle);
+      break;
+    case backLeft: 
+      comdToSend =comdToSend+" #16P"+ convToRawVals(16,hipAngle) + " #17P" + convToRawVals(17,kneeAngle) + " #18P" + convToRawVals(18,ankleAngle);
+      break;
+    case backRight: 
+      comdToSend =comdToSend+" #0P"+  convToRawVals(0,hipAngle) + " #1P" +   convToRawVals(1,kneeAngle) + " #2P" +   convToRawVals(2,ankleAngle);
+      break;      
+  }
+  comdToSend = comdToSend + "T" + timeTaken;
+
+  return comdToSend;
+  
+}
+
 void startPosition(){
   SSCSerial.println("#P");
   
@@ -172,8 +232,21 @@ void startPosition(){
 /** Note, timeToTake is not overall time, but time per leg command */
 void acheivePose(String poseName, int timeToTake, int timeAllowance, bool responseOn)
 {
-  //if(poseName == "Pose 01\n")
-  if(poseName == "BR_leg_forward\n")
+  if(poseName.substring(5) == "rotateHip\n") // NB for extended pose only atm 
+  // Should be: poseName == "xx_BR_rotateHip\n" //will starting with xx cause type errors?
+  {
+    if(poseName.substring(3,4) == "BR"){
+      number = poseName.substring(0,1).toInt(); //number will be in deg, needs converting to pwm
+      String cmd = getLegCommandHipRotate(backRight, upExtend, number, timeToTake);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);  
+
+      String cmd = getLegCommandHipRotate(backRight, extended, number, timeToTake);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+    }
+  }
+    elseif(poseName == "BR_leg_forward\n")
   {
 //    /* Acheive diagram 1 */
 //    String cmd =getLegCommand(frontLeft, middle, 1000);
