@@ -11,6 +11,16 @@ while 1
     resp = writeread(robot_serial,"-40_FR_rotateHip")%xx_BR_rotateHip
 
     pause(3);
+    resp = writeread(robot_serial,"-40_BR_rotateHip")%xx_BR_rotateHip
+
+    pause(3);
+    resp = writeread(robot_serial,"-40_FL_rotateHip")%xx_BR_rotateHip
+
+    pause(3);
+    
+    resp = writeread(robot_serial,"-40_BL_rotateHip")%xx_BR_rotateHip
+
+    pause(3);
     
     resp = writeread(robot_serial,"+00_FR_rotateHip")%xx_BR_rotateHip
 

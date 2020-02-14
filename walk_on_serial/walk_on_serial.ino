@@ -31,7 +31,7 @@ SoftwareSerial SSCSerial(cSSC_IN, cSSC_OUT);
  * FUNCTIONS 
  ********************************/
 
-int convToRawVals(int servoNum, int moveAmount) {
+int convToRawVals(int servoNum, int moveAmount, int hipOffset) {
   // #9 to lower leg, lower the P , to raise leg increase P, #8 move backward descrease P, move forward increase P
 
   // move amout should be +ve meaning up/forward, and -ve is down/backward for all legs
@@ -40,8 +40,8 @@ int convToRawVals(int servoNum, int moveAmount) {
   int directionFlip;
   switch (servoNum) {
     case 0:   //BR
-      zeroPosition = 1500;
       directionFlip = -1;
+      zeroPosition = 1500 + ( hipOffset);
       break;
     case 1:   //BR  
       zeroPosition = 1500;
@@ -52,8 +52,8 @@ int convToRawVals(int servoNum, int moveAmount) {
        directionFlip = -1;
       break;
     case 8:     //FR  
-       zeroPosition = 1500;
        directionFlip = 1;
+       zeroPosition = 1500 + ( hipOffset);
       break;
     case 9:     //FR 
        zeroPosition = 1500;
@@ -64,8 +64,8 @@ int convToRawVals(int servoNum, int moveAmount) {
        directionFlip = 1;
       break;            
     case 16:  //BL  
-       zeroPosition = 1500;
        directionFlip = 1;
+       zeroPosition = 1500 + ( hipOffset);       
       break;
     case 17:  //BL 
        zeroPosition = 1500;
@@ -76,8 +76,8 @@ int convToRawVals(int servoNum, int moveAmount) {
        directionFlip = 1;
       break;        
     case 24:     //FL  
-       zeroPosition = 1500;
        directionFlip = -1;
+       zeroPosition = 1500 + ( hipOffset);       
       break;
     case 25:     //FL 
        zeroPosition = 1550;
@@ -96,7 +96,7 @@ int convToRawVals(int servoNum, int moveAmount) {
 void moveServosToSame(int servoNumbers[], int nServos, int movement, int timeTaken){
   String comdToSend="";
   for (int i = 0; i < nServos; i++){
-    comdToSend = comdToSend + " #" + servoNumbers[i] + " P" + convToRawVals(servoNumbers[i], movement);
+    comdToSend = comdToSend + " #" + servoNumbers[i] + " P" + convToRawVals(servoNumbers[i], movement,0);
     // Serial.println(comdToSend);
   }
 
@@ -146,16 +146,16 @@ String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTa
   String comdToSend="";
   switch (legNum) {
     case frontLeft:
-      comdToSend = comdToSend+" #24P"+ convToRawVals(24,hipAngle) + " #25P" + convToRawVals(25,kneeAngle) + " #26P" + convToRawVals(26,ankleAngle);
+      comdToSend = comdToSend+" #24P"+ convToRawVals(24,hipAngle,0) + " #25P" + convToRawVals(25,kneeAngle,0) + " #26P" + convToRawVals(26,ankleAngle,0);
       break;
     case frontRight:
-      comdToSend = comdToSend+" #8P"+  convToRawVals(8,hipAngle) + " #9P" +   convToRawVals(9,kneeAngle) + " #10P" +  convToRawVals(10,ankleAngle);
+      comdToSend = comdToSend+" #8P"+  convToRawVals(8,hipAngle,0) + " #9P" +   convToRawVals(9,kneeAngle,0) + " #10P" +  convToRawVals(10,ankleAngle,0);
       break;
     case backLeft: 
-      comdToSend =comdToSend+" #16P"+ convToRawVals(16,hipAngle) + " #17P" + convToRawVals(17,kneeAngle) + " #18P" + convToRawVals(18,ankleAngle);
+      comdToSend =comdToSend+" #16P"+ convToRawVals(16,hipAngle,0) + " #17P" + convToRawVals(17,kneeAngle,0) + " #18P" + convToRawVals(18,ankleAngle,0);
       break;
     case backRight: 
-      comdToSend =comdToSend+" #0P"+  convToRawVals(0,hipAngle) + " #1P" +   convToRawVals(1,kneeAngle) + " #2P" +   convToRawVals(2,ankleAngle);
+      comdToSend =comdToSend+" #0P"+  convToRawVals(0,hipAngle,0) + " #1P" +   convToRawVals(1,kneeAngle,0) + " #2P" +   convToRawVals(2,ankleAngle,0);
       break;      
   }
   comdToSend = comdToSend + "T" + timeTaken;
@@ -173,32 +173,32 @@ String getLegCommandHipRotate(enum legLocations legNum, enum legPoses poseNum, i
   int ankleAngle;
   switch (poseNum) {
     case extended:
-      hipAngle = 100 + hipPwmOffset;
+      hipAngle = 100;
       kneeAngle = -100;
       ankleAngle = -300;
       break;
     case middle:
-      hipAngle = 0 + hipPwmOffset;
+      hipAngle = 0;
       kneeAngle = 0;
       ankleAngle = 0;
       break;
     case side: 
-      hipAngle = -500 + hipPwmOffset;
+      hipAngle = -500;
       kneeAngle = 0;
       ankleAngle = 0;
       break; 
     case upExtend:
-      hipAngle = 100 + hipPwmOffset;
+      hipAngle = 100;
       kneeAngle = 200;
       ankleAngle = -300;
       break;
     case upMiddle:
-      hipAngle = 0 + hipPwmOffset;
+      hipAngle = 0;
       kneeAngle = 200;
       ankleAngle = 0;
       break;   
     case upSide: 
-      hipAngle = -500 + hipPwmOffset;
+      hipAngle = -500;
       kneeAngle = 200;
       ankleAngle = 0;
       break;              
@@ -206,16 +206,16 @@ String getLegCommandHipRotate(enum legLocations legNum, enum legPoses poseNum, i
   String comdToSend="";
   switch (legNum) {
     case frontLeft:
-      comdToSend = comdToSend+" #24P"+ convToRawVals(24,hipAngle) + " #25P" + convToRawVals(25,kneeAngle) + " #26P" + convToRawVals(26,ankleAngle);
+      comdToSend = comdToSend+" #24P"+ convToRawVals(24,hipAngle,hipPwmOffset) + " #25P" + convToRawVals(25,kneeAngle,0) + " #26P" + convToRawVals(26,ankleAngle,0);
       break;
     case frontRight:
-      comdToSend = comdToSend+" #8P"+  convToRawVals(8,hipAngle) + " #9P" +   convToRawVals(9,kneeAngle) + " #10P" +  convToRawVals(10,ankleAngle);
+      comdToSend = comdToSend+" #8P"+  convToRawVals(8,hipAngle,hipPwmOffset) + " #9P" +   convToRawVals(9,kneeAngle,0) + " #10P" +  convToRawVals(10,ankleAngle,0);
       break;
     case backLeft: 
-      comdToSend =comdToSend+" #16P"+ convToRawVals(16,hipAngle) + " #17P" + convToRawVals(17,kneeAngle) + " #18P" + convToRawVals(18,ankleAngle);
+      comdToSend =comdToSend+" #16P"+ convToRawVals(16,hipAngle,hipPwmOffset) + " #17P" + convToRawVals(17,kneeAngle,0) + " #18P" + convToRawVals(18,ankleAngle,0);
       break;
     case backRight: 
-      comdToSend =comdToSend+" #0P"+  convToRawVals(0,hipAngle) + " #1P" +   convToRawVals(1,kneeAngle) + " #2P" +   convToRawVals(2,ankleAngle);
+      comdToSend =comdToSend+" #0P"+  convToRawVals(0,hipAngle,hipPwmOffset) + " #1P" +   convToRawVals(1,kneeAngle,0) + " #2P" +   convToRawVals(2,ankleAngle,0);
       break;      
   }
   comdToSend = comdToSend + "T" + timeTaken;
@@ -236,25 +236,35 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
   // Should be: poseName == "+xx_BR_rotateHip\n" //will starting with xx cause type errors?
   {
     enum legLocations selectedLeg;
+    enum legPoses upPose;
+    enum legPoses downPose;
     if(poseName.indexOf("BR") != -1){ //probably inef. use single func call and var assg instead...
       selectedLeg = backRight;
+      upPose = upSide;
+      downPose = side;
     } else if (poseName.indexOf("BL") != -1){
       selectedLeg = backLeft;
+      upPose = upMiddle;
+      downPose = middle;
     } else if (poseName.indexOf("FR") != -1){
       selectedLeg = frontRight;
+      upPose = upExtend;
+      downPose = extended;
     } else if (poseName.indexOf("FL") != -1){
       selectedLeg = frontLeft;
+      upPose = upMiddle;
+      downPose = middle;
     }else{
       /* Serial.println(cmd);*/SSCSerial.println("ERROR Leg not identified in command");
     }
     String numberAsString = poseName.substring(0,3); //number will be in deg, converted to pwm in getLegCommandHipRotate
 //    Serial.println(numberAsString);
     int number = numberAsString.toInt();
-    String cmd = getLegCommandHipRotate(selectedLeg, upExtend, number, timeToTake);
+    String cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTake);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);  
 
-    cmd = getLegCommandHipRotate(selectedLeg, extended, number, timeToTake);
+    cmd = getLegCommandHipRotate(selectedLeg, downPose, number, timeToTake);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
