@@ -5,8 +5,7 @@ resp = writeread(robot_serial,"start_pose")
 pause(1.5)
 
 while 1
-    resp = writeread(robot_serial,"BR_leg_forward")
-    pause(1.5);
+    
     
     %%%% tap and adjust %%%%
     resp = writeread(robot_serial,"FR_leg_forward")%this is a tap
@@ -48,7 +47,9 @@ while 1
     resp = writeread(robot_serial,"-05_FLe_rotateHip")
     pause(1.5);
     resp = writeread(robot_serial,"FLf_body_forward")
-
+    
+    resp = writeread(robot_serial,"BR_leg_forward")
+    pause(1.5);
 end
 pause(1.5);
 clearvars robot_serial
