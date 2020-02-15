@@ -248,11 +248,30 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
       selectedLeg = backRight;
       upPose = upSide;
       downPose = side;
-    } else if (poseName.indexOf("BL") != -1){
+    } 
+    else if (poseName.indexOf("BLm") != -1)
+    {
       selectedLeg = backLeft;
       upPose = upMiddle;
       downPose = middle;
-    } else if (poseName.indexOf("FR") != -1){
+    }
+    else if (poseName.indexOf("BLs") != -1)
+    {
+      selectedLeg = backLeft;
+      upPose = upSide;
+      downPose = side;
+
+      timeToTakeTapping = 700;
+      String cmd = getLegCommand(selectedLeg, upPose, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+      
+      cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+    } 
+    else if (poseName.indexOf("FR") != -1)
+    {
       selectedLeg = frontRight;
       upPose = upExtend;
       downPose = extended;
@@ -265,11 +284,36 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
       /* Serial.println(cmd);*/SSCSerial.println(cmd);
       delay(timeToTake + timeAllowance);
       
-    } else if (poseName.indexOf("FL") != -1){
+    } 
+    else if (poseName.indexOf("FLm") != -1)
+    {
       selectedLeg = frontLeft;
       upPose = upMiddle;
       downPose = middle;
-    }else{
+    }
+    else if (poseName.indexOf("FLe") != -1)
+    {
+      selectedLeg = frontLeft;
+      upPose = upExtend;
+      downPose = extended;
+
+      timeToTakeTapping = 700;
+      String cmd = getLegCommand(selectedLeg, upPose, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+      
+      cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+    }
+//     else if (poseName.indexOf("allf") != -1){
+//      selectedLeg = frontLeft;
+//      upPose = upMiddle;
+//      downPose = middle;
+//      String cmd = getLegCommandHipRotate(frontRight, upPose, number, timeToTakeTapping);
+//      cmd = cmd + getLegCommand(backLeft, middle, 1000);
+//    } 
+    else{
       /* Serial.println(cmd);*/SSCSerial.println("ERROR Leg not identified in command");
     }
 
