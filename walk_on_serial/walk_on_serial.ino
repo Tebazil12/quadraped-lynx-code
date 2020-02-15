@@ -235,6 +235,12 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
   if(poseName.indexOf("rotateHip") != -1) // NB for extended pose only atm 
   // Should be: poseName == "+xx_BR_rotateHip\n" //will starting with xx cause type errors?
   {
+    String numberAsString = poseName.substring(0,3); //number will be in deg, converted to pwm in getLegCommandHipRotate
+//    Serial.println(numberAsString);
+    int number = numberAsString.toInt();
+
+    int timeToTakeTapping =10;
+    
     enum legLocations selectedLeg;
     enum legPoses upPose;
     enum legPoses downPose;
@@ -250,6 +256,15 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
       selectedLeg = frontRight;
       upPose = upExtend;
       downPose = extended;
+      timeToTakeTapping = 700;
+      String cmd = getLegCommand(selectedLeg, upPose, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+      
+      cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTakeTapping);
+      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+      delay(timeToTake + timeAllowance);
+      
     } else if (poseName.indexOf("FL") != -1){
       selectedLeg = frontLeft;
       upPose = upMiddle;
@@ -257,19 +272,8 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     }else{
       /* Serial.println(cmd);*/SSCSerial.println("ERROR Leg not identified in command");
     }
-    String numberAsString = poseName.substring(0,3); //number will be in deg, converted to pwm in getLegCommandHipRotate
-//    Serial.println(numberAsString);
-    int number = numberAsString.toInt();
 
-    String cmd = getLegCommand(selectedLeg, upPose, timeToTake);
-    /* Serial.println(cmd);*/SSCSerial.println(cmd);
-    delay(timeToTake + timeAllowance);
-    
-    cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTake);
-    /* Serial.println(cmd);*/SSCSerial.println(cmd);
-    delay(timeToTake + timeAllowance);  
-
-    cmd = getLegCommandHipRotate(selectedLeg, downPose, number, timeToTake);
+    String cmd = getLegCommandHipRotate(selectedLeg, downPose, number, timeToTakeTapping);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
@@ -366,6 +370,22 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
   } 
+    else if (poseName == "FR_leg_side\n")
+  {
+    /*Acheive diagram 2 position*/
+    String cmd = getLegCommand(frontRight, upExtend, timeToTake);
+    /* Serial.println(cmd);*/ SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    
+    cmd = getLegCommand(frontRight, upSide, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    
+    cmd = getLegCommand(frontRight, side, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    if (responseOn) Serial.println("Acheived");
+  } 
   else if (poseName == "FRf_body_forward\n")
   {
     /* Acheive diagram 3 position*/
@@ -415,6 +435,17 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     String cmd =getLegCommand(frontRight, side, timeToTake);
     cmd = cmd + getLegCommand(frontLeft, middle, timeToTake);
     cmd = cmd + getLegCommand(backRight, extended, timeToTake);
+    cmd = cmd + getLegCommand(backLeft, middle, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    if (responseOn) Serial.println("Acheived");
+  }
+  else if (poseName == "all_middle\n")
+  {
+    /* 6 */
+    String cmd =getLegCommand(frontRight, middle, timeToTake);
+    cmd = cmd + getLegCommand(frontLeft, middle, timeToTake);
+    cmd = cmd + getLegCommand(backRight, middle, timeToTake);
     cmd = cmd + getLegCommand(backLeft, middle, timeToTake);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);
