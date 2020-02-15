@@ -7,10 +7,7 @@ ex.init();
 
 ONLINE = true;% on/offline
 
-VIDEO_ON = true;% video output
-if VIDEO_ON; videos = [ "Data" ]; end %#ok<NBRAK> % "Voronoi" "Offline"
-
-% paths for saving data
+%% paths for saving data
 if strfind(system_dependent('getos'), 'Linux') == 1
     dirPath = '/home/lizzie/git/tactile-core/matlab/experiments/TacTip-demos/exploration/data';
 
@@ -24,28 +21,12 @@ else
     throw(ME) 
 end
 
-%% init experiment parameters
-
-% set robot parameters
-Expt.actionTraj = [0 0 5 0 0 0; 0 0 0 0 0 0]; % tap move trajectory wrt tool/sensor frame
-Expt.robotSpeed = [25 15 15 10];%2*[50 30 15 10];
-Expt.workFrame = [326-5 -272 68-15-2 180 0 180];%[475 180 69 180 0 180]; % board 2 ABB1 % specify work frame wrt base frame (x,y,z,r,p,y) %find using abb jogger
-% the workframe should be at the object edge with the greatest x component
-% as ref tap is taken here
-
-% tactip calibration
-Expt.sensorParams = [119.18 232.37 54.66 129.47 0.46 0.47 0.28]; % min_threshold max_threshold min_area max_area min_circularity min_convexity min_inertia_ratio
-
-if VIDEO_ON;Expt.videos = videos; Expt.resolution = 400;end
-
-%% startup everything
+%% save basic metadata
 fileName = mfilename; 
 
 % create directory
-if ONLINE
-    dirTrain = [fileName datestr(now,'yyyy-mm-dd_HHMM')];
-    mkdir(fullfile(dirPath,dirTrain)); 
-end
+dirTrain = [fileName datestr(now,'yyyy-mm-dd_HHMM')];
+mkdir(fullfile(dirPath,dirTrain)); 
 
 % create file of metadata 
 info_file = fopen(fullfile(dirPath,dirTrain,'README'),'w');
@@ -62,105 +43,75 @@ fprintf(info_file, '-----------------------\r\n');
 fprintf(info_file, 'Robot code online: step5, collect data at-10:10,banana\r\n');
 fclose(info_file);
 
+%% turn things on
 
 % startup robot
-if ONLINE; robotArm = ABBRobotArm; end
-robotArm.setSpeed(Expt.robotSpeed)
+ex.robot_serial = serialport("COM4",9600, "Timeout", 30);
+pause(1.5); % VERY IMPORTANT PAUSE, does not work without it! Opening serial port takes time.
+
+resp = writeread(ex.robot_serial,"start_pose")
+pause(1.5);
 
 % startup sensor
-if ONLINE && isfield(Expt,'sensorParams') 
-    par = Expt.sensorParams;
-    sensor = TacTip('min_threshold',par(1),...
-                    'max_threshold',par(2),...
-                    'min_area',par(3),...
-                    'max_area',par(4),...
-                    'min_circularity',par(5),...
-                    'min_convexity',par(6),...
-                    'min_inertia_ratio',par(7));
-end
+sensorParams =[60 ...   % Min_Threshold
+                300 ... % Max_Threshold
+                100 ...  % Min_Area
+                290 ... % Max_Area
+                0.3 ...    % Min_Circularity
+                0.61 ...   % Min_Convexity
+                0.22];     % Min_Inertia_Ratio
+sensor = TacTip('Exposure', -6,...
+            'Brightness', 225,...
+            'Contrast', 225,...
+            'Saturation', 0, ...
+            'Tracking',true, ...
+            'MinThreshold',sensorParams(1),...
+            'MaxThreshold',sensorParams(2), ...
+            'MinArea',sensorParams(3), ...
+            'MaxArea',sensorParams(4),...
+            'MinCircularity',sensorParams(5), ...
+            'MinConvexity',sensorParams(6), ...
+            'MinInertiaRatio',sensorParams(7));
 
-ex.robot = TactileActionRobot(robotArm, sensor, Expt.workFrame, Expt.actionTraj);
 
-% detect and choose pins
-rad = 300; mdist = 0;
-if ONLINE; Expt.pinPositions = ex.robot.initPinPositions(rad,mdist); end
 
-[Expt.nPins, Expt.nDims] = size(Expt.pinPositions);
+%% load reference tap
+load('H:\git\quadraped-lynx-code\ref_taps\blah.mat') %TODO make file!!!
+ex.ref_tap = ref_tap;
 
-% startup camera
-ex.camera = Camera(Expt);
-ex.camera.initialize(dirPath, dirTrain, [], [])
+%TODO make and load still_tap!
 
-% startup video
-video = Video(Expt);
+% NB, walking takes one still frame at bottom of tap - need to either
+% switch to raw values, or take a neutral frame to do displacements of pins
 
-% startup model
-tactile = TactileData(Expt);
-
-%% collect reference tap
-COLLECT_NEW_REFTAP = true;
-
-% Define/load reference tap
-if COLLECT_NEW_REFTAP
-    %location of edge
-    ex.robot.move([0 0 0 0 0 0])
-    tacData = ex.robot.recordAction; 
-    ref_tap = tacData;
-    
-    % save point in file for future use
-    save(fullfile(dirPath,dirTrain,"ref_tap"), 'ref_tap')
-else
-    load('/home/lizzie/git/masters-tactile/blah.mat') %TODO file structure, where file should go & windows v linux
-%     ref_tap = ref_tap;
-end
-
-% Normalize data, so get distance moved not just relative position
-ex.ref_diffs_norm = ref_tap(: ,:  ,:) - ref_tap(1 ,:  ,:); %normalized, assumes starts on no contact/all start in same position
-
-% find the frame in ref_diffs_norm with greatest diffs
-[~,an_index] = max(abs(ex.ref_diffs_norm));
-ex.ref_diffs_norm_max_ind = round(mean([an_index(:,:,1) an_index(:,:,2)]));
+% % Normalize data, so get distance moved not just relative position
+% ex.ref_diffs_norm = ref_tap(: ,:  ,:) - ref_tap(1 ,:  ,:); %normalized, assumes starts on no contact/all start in same position
+% 
+% % find the frame in ref_diffs_norm with greatest diffs
+% [~,an_index] = max(abs(ex.ref_diffs_norm));
+% ex.ref_diffs_norm_max_ind = round(mean([an_index(:,:,1) an_index(:,:,2)]));
 
 %% Bootstrap 
-[model, current_step] = ex.bootstrap();
+[model, current_step] = ex.bootstrap(); %TODO make this for walking!!!
 
 %% Main loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-MAX_STEPS = 90;
-STEP_LENGTH = 5;%mm, 
+MAX_STEPS = 10;
 TOL = 2; % mm, tolerance of on edge/not on edge
-MAX_DISP =15;%mm, largest step can take on a predicted distance
+MAX_DISP =10;%mm, largest step can take on a predicted distance
 
-for current_step = current_step+1:MAX_STEPS % (&& not returned to begining location - checked at end of while loop)
+for current_step = current_step+1:MAX_STEPS
     disp(strcat("*********Main loop: ", mat2str(current_step)))
     ex.tap_number = 0; % reset on every radius. Tapping adds 1 at start so that rest of logic works with same value
     
-    % Extrapolate previous two dissim points, move along this by step size
-    % and rotate tactip
-    if size(ex.dissim_locations,1) == 0
-        error("ex.dissim_locations is empty, bootstrap failed?")
-    elseif size(ex.dissim_locations,1) == 1
-        if current_step ~= 2
-            error("ex.dissim_locations is only 1 long but current step is not 2")
-        end
-        new_theta = ex.current_rotation;
-%         new_theta_tan = ex.current_rotation;
-    else
-        step = ex.dissim_locations(end,:) - ex.dissim_locations(end-1,:);
-        new_theta = -atan2d(step(1),step(2)); %(Y,X), x =1,y=2
-    end
-    new_test_point = ex.dissim_locations(end,:) + STEP_LENGTH*[sind(-new_theta)...
-                                                               cosd(-new_theta)];
-    actual_step_length= pdist2(ex.dissim_locations(end,:),new_test_point);
-    if round(actual_step_length,3) ~= STEP_LENGTH
-        actual_step_length %#ok<NOPTS>
-        warning("Distance is not step length") 
-    end
-                                                           
-    if new_theta < -180
-        new_theta = new_theta +360;
-    end
-    ex.move_and_tap([new_test_point new_theta],current_step); %hereafter, ex.current_rotation == current_theta
+    % Do tap
+    resp = writeread(ex.robot_serial,"FR_leg_forward")%this is a tap
+    pause(1.5); % give time to get there
+    ex.tap_number = ex.tap_number +1;
+    pins = sensor.record;
+    ex.data{current_step}{ex.tap_number} = pins;
+    
+    % Process pins
     new_tap = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
     
     if ~isequal(size(new_tap), [1 size(ref_tap,2)*2])
@@ -170,15 +121,33 @@ for current_step = current_step+1:MAX_STEPS % (&& not returned to begining locat
     %% predict distance to edge from this tap using gplvm
     new_x = model.predict_singletap(new_tap);
     disp_to_edge = -new_x;
+    turn_hips_by = round(disp_to_edge);
     disp(strcat("Predicted disp. is: ", mat2str(new_x)))
     
     % Check model prediction is reasonable (don't move ridiculously large
     % distances)
     if abs(disp_to_edge) < MAX_DISP
+        
         % move distance predicted 
-        new_test_point2 = new_test_point + disp_to_edge*[cosd(ex.current_rotation)...
-                                                         sind(ex.current_rotation)];
-        ex.move_and_tap([new_test_point2 ex.current_rotation],current_step);
+        if disp_to_edge < 0 
+            command_to_send = "-";
+        else
+            command_to_send = "+";
+        end
+
+        if disp_to_edge <10 && disp_to_edge >-10
+            command_to_send = strcat(command_to_send, "0");
+        end
+
+        command_to_send = strcat(command_to_send, int2str(abs(disp_to_edge)), "_FR_rotateHip")
+
+        % Do tap
+        resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+        pause(3); % give time to get there
+        ex.tap_number = ex.tap_number +1;
+        pins = sensor.record;
+        ex.data{current_step}{ex.tap_number} = pins;
+        
         new_tap2 = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
 
         if ~isequal(size(new_tap2), [1 size(ref_tap,2)*2])
@@ -200,9 +169,26 @@ for current_step = current_step+1:MAX_STEPS % (&& not returned to begining locat
         
         % tap along edge
         for disp_from_start = -10:10 
-            temp_point = new_test_point + disp_from_start*[cosd(ex.current_rotation)...
-                                                           sind(ex.current_rotation)];
-            ex.move_and_tap([temp_point ex.current_rotation],current_step);
+            
+            % move distance predicted 
+            if disp_from_start < 0 
+                command_to_send = "-";
+            else
+                command_to_send = "+";
+            end
+
+            if disp_from_start <10 && disp_from_start >-10
+                command_to_send = strcat(command_to_send, "0");
+            end
+
+            command_to_send = strcat(command_to_send, int2str(abs(disp_from_start)), "_FR_rotateHip")
+
+            % Do tap
+            resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+            pause(3); % give time to get there
+            ex.tap_number = ex.tap_number +1;
+            pins = sensor.record;
+            ex.data{current_step}{ex.tap_number} = pins;
         end
         
         % calc dissim, align to 0 (edge)
@@ -218,77 +204,91 @@ for current_step = current_step+1:MAX_STEPS % (&& not returned to begining locat
             warning("Minimum diss was at far end, actual minima probably not found, model may be bad")
         end
         
-        new_dissim_loc = new_test_point - x_min*[cosd(ex.current_rotation)...
-                                                 sind(ex.current_rotation)];
-                                             
-        % location closest to 0 dissim is point for next extrapolation
-        ex.dissim_locations = [ex.dissim_locations; new_dissim_loc]; 
-        
-        % predict mu, add to model (TODO, do we repredict mu's for all
-        % previous lines or just add new line?)
+        % predict mu, add to model
         model.add_a_radius(ys_for_real(n_useless_taps+1:end,:), xs_current_step)
         
-        %TODO do hyper pars need re-optimizing? i.e. after first
-        %line/couple of lines?
+        % rotate hips by x_min in next phases of walking
+        turn_hips_by = round(x_min);
+        
         
     else %(distance to edge <= tol)
-        disp("Distance was good, moving on")
-        % save this location for next extrapolation
-        ex.dissim_locations = [ex.dissim_locations; new_test_point2]; 
+        disp("Distance was good, moving on") 
+        
     end
-    
-    % comment out this graph to make things run a little faster
-    figure(1)
-    plot(ex.dissim_locations(:,1),ex.dissim_locations(:,2),'+')
-    
-    figure(2)
-    clf
-    hold on
-    for a= 1:size(ex.actual_locations,2)
-        for b = 1:size(ex.actual_locations{a},2)
-            if mod(a,3) == 0 
-                plot(ex.actual_locations{a}{b}(1),ex.actual_locations{a}{b}(2),'b+')
-            elseif mod(a,3) == 1 
-                plot(ex.actual_locations{a}{b}(1),ex.actual_locations{a}{b}(2),'r+')
-            elseif mod(a,3) == 2 
-                plot(ex.actual_locations{a}{b}(1),ex.actual_locations{a}{b}(2),'g+')
-            end
-    %         pause(1)
-        end
-    end
-    r = 53;
-    % --- https://uk.mathworks.com/matlabcentral/answers/3058-plotting-circles 
-    ang=0:0.01:2*pi; 
-    x=-53+r*cos(ang);
-    y=r*sin(ang);
-    plot(x,y);
-    %---%
-    plot(ex.dissim_locations(:,1),ex.dissim_locations(:,2),'o')
-    plot(ex.dissim_locations(:,1),ex.dissim_locations(:,2))
-    axis equal
-    hold off
     
     % save data to file each loop
-    save(fullfile(dirPath,dirTrain,mat2str(current_step)), 'ex') %TODO is this too much info in one file? loading might overwrite lots of vars...
+    save(fullfile(dirPath,dirTrain,mat2str(current_step)), 'ex')
     
-    % back at start location?, break if so (only check after 2nd point)
-    if pdist2(ex.dissim_locations(1,:), ex.dissim_locations(end,:)) < STEP_LENGTH && current_step > 2
-        disp("Distance to start point is less than step length, breaking loop")
-        break
-    end
+    if abs(turn_hips_by) > TOL % not worth time & energy twisting if less than 2
+        if turn_hips_by < 0 
+            start_hip_rotation_command = "-";
+            start_hip_antirotation_command = "+";
+        else
+            start_hip_rotation_command = "+";
+            start_hip_antirotation_command = "-";
+        end
+
+        if turn_hips_by <10 && turn_hips_by >-10
+            start_hip_rotation_command = strcat(start_hip_rotation_command, "0");
+            start_hip_antirotation_command = strcat(start_hip_antirotation_command, "0");
+        end
+
+        start_hip_rotation_command = strcat(start_hip_rotation_command, int2str(abs(turn_hips_by)));
+        start_hip_antirotation_command = strcat(start_hip_antirotation_command, int2str(abs(turn_hips_by)));
+    end 
+    
+    % next walking steps ...
+    resp = writeread(robot_serial,"FR_leg_side")
+    pause(1.5);
+    
+    command_to_send = strcat(start_hip_antirotation_command, "_BLm_rotateHip");
+    resp = writeread(robot_serial,command_to_send)
+    pause(3);
+    
+    command_to_send = strcat(start_hip_antirotation_command, "_BR_rotateHip");
+    resp = writeread(robot_serial,command_to_send)
+    pause(3);
+    
+    command_to_send = strcat(start_hip_antirotation_command, "_FLm_rotateHip");
+    resp = writeread(robot_serial,command_to_send)
+    pause(3);
+    
+    resp = writeread(robot_serial,"FR_leg_forward") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
+    pause(1.5);
+
+    resp = writeread(robot_serial,"FRf_body_forward")
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"BL_leg_forward")
+    pause(1.5);
+
+    command_to_send = strcat(start_hip_rotation_command, "_BLs_rotateHip");
+    resp = writeread(robot_serial,command_to_send)
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"FL_leg_forward")
+    pause(1.5);
+    
+    command_to_send = strcat(start_hip_rotation_command, "_FLe_rotateHip");
+    resp = writeread(robot_serial,command_to_send)
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"FLf_body_forward")
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"BR_leg_forward")
+    pause(1.5);
+    
 end %main loop
 
 disp("Main done, saving and closing")
+
 % save all data
 save(fullfile(dirPath,dirTrain,'all_data'))
 
-%TODO? display gplvm model graph
+% close everything
+clearvars ex.robot_serial
 
-% commonShutdown (from tactile core utils) - adapted to use ex. instance
-ex.robot.move(zeros(1, 6));
-ex.robot.setWorkFrame([400, 0, 300, 180, 0, 180]);
-ex.robot.move(zeros(1, 6));
 delete(sensor); 
-delete(robotArm);
-delete(ex.robot);
+
 disp("All done.")
