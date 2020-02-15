@@ -17,19 +17,19 @@ while 1
     resp = writeread(robot_serial,"FR_leg_side")
     pause(1.5);
     
-    resp = writeread(robot_serial,"-10_BL_rotateHip")% in middle pose
+    resp = writeread(robot_serial,"+10_BL_rotateHip")% in middle pose
     pause(3);
     
-    resp = writeread(robot_serial,"-10_BR_rotateHip")% in side pose
+    resp = writeread(robot_serial,"+10_BR_rotateHip")% in side pose
     pause(3);
     
-    resp = writeread(robot_serial,"-10_FL_rotateHip")% in middle pose
+    resp = writeread(robot_serial,"+10_FL_rotateHip")% in middle pose
     pause(3);
     
     resp = writeread(robot_serial,"FR_leg_forward") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
     pause(1.5);
-    resp = writeread(robot_serial,"-10_FR_rotateHip")%in extended pose
-    pause(3);
+%     resp = writeread(robot_serial,"-10_FR_rotateHip")%in extended pose
+%     pause(3);
     
     
     

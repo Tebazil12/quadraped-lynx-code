@@ -239,7 +239,7 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
 //    Serial.println(numberAsString);
     int number = numberAsString.toInt();
 
-    int timeToTakeTapping =10;
+    int timeToTakeTapping =1;
     
     enum legLocations selectedLeg;
     enum legPoses upPose;
@@ -350,6 +350,18 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
     delay(timeToTake + timeAllowance);
     
     cmd = getLegCommand(frontRight, extended, timeToTake);
+    /* Serial.println(cmd);*/SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    if (responseOn) Serial.println("Acheived");
+  } 
+  else if (poseName == "FR_leg_forward_hover\n")
+  {
+    /*Acheive diagram 2 position*/
+    String cmd = getLegCommand(frontRight, upSide, timeToTake);
+    /* Serial.println(cmd);*/ SSCSerial.println(cmd);
+    delay(timeToTake + timeAllowance);
+    
+    cmd = getLegCommand(frontRight, upExtend, timeToTake);
     /* Serial.println(cmd);*/SSCSerial.println(cmd);
     delay(timeToTake + timeAllowance);
     if (responseOn) Serial.println("Acheived");
