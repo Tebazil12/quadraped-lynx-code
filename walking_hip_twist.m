@@ -5,25 +5,31 @@ resp = writeread(robot_serial,"start_pose")
 pause(1.5)
 
 while 1
-    resp = writeread(robot_serial,"BR_leg_forward")
-    pause(1.5);
-
-    resp = writeread(robot_serial,"FR_leg_forward")
+    resp = writeread(robot_serial,"BR_leg_middle")
     pause(1.5);
     
-    %%% FAKE TAP %%%
-    resp = writeread(robot_serial,"FR_leg_forward_tap")
-    pause(3);
-
-    resp = writeread(robot_serial,"-40_FR_rotateHip")%xx_BR_rotateHip
-
+    %%%% tap and adjust %%%%
+    resp = writeread(robot_serial,"FR_leg_forward")%this is a tap
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"FR_leg_side")
+    pause(1.5);
+    
+    resp = writeread(robot_serial,"-10_BL_rotateHip")% in middle pose
     pause(3);
     
-    resp = writeread(robot_serial,"+00_FR_rotateHip")%xx_BR_rotateHip
-
+    resp = writeread(robot_serial,"-10_BR_rotateHip")% in side pose
     pause(3);
     
-    %%%%%%%
+    resp = writeread(robot_serial,"FR_leg_forward")%this is a tap
+    pause(1.5);
+    resp = writeread(robot_serial,"-10_FR_rotateHip")%in extended pose
+    pause(3);
+    
+    resp = writeread(robot_serial,"-10_FL_rotateHip")% in middle pose
+    pause(3);
+    
+    %%%%%%%%%%
 
     resp = writeread(robot_serial,"FRf_body_forward")
 
@@ -33,11 +39,6 @@ while 1
     resp = writeread(robot_serial,"FL_leg_forward")
     pause(1.5);
     resp = writeread(robot_serial,"FLf_body_forward")
-    
-    
-    
-    
-    
 
 end
 pause(1.5);
