@@ -1,7 +1,9 @@
 % Adapted from tactile-core code (N Lepora April 2018) by Elizabeth Stone
 
 killPython; close all; clear all; clear classes; clear figures; clc; %#ok<CLCLS,CLALL> % dbstop if error
-    
+
+startPyroNameServer
+
 ex = Experiment; % Experiment instance for this experiment
 ex.init();
 
@@ -40,7 +42,7 @@ fprintf(info_file,'\r\nCurrent git HEAD: %s' ,current_head);
 fprintf(info_file,'\r\nCurrent branch:\r\n %s', branches);
 fprintf(info_file, '\r\nExperiment Description:\r\n');
 fprintf(info_file, '-----------------------\r\n');
-fprintf(info_file, 'Walking Robot code online: \r\n');
+fprintf(info_file, 'Walking Robot code online: removed gp smoothing \r\n');
 fclose(info_file);
 
 %% turn things on
@@ -113,6 +115,9 @@ for current_step = current_step+1:MAX_STEPS
     ex.tap_number = ex.tap_number +1;
     pins = ex.sensor.record;
     ex.data{current_step}{ex.tap_number} = pins;
+    if size(pins,2) ~= 37
+        error("New tap is not same size as ref_tap")
+    end
     
     % Process pins
     new_tap = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
@@ -150,6 +155,9 @@ for current_step = current_step+1:MAX_STEPS
         ex.tap_number = ex.tap_number +1;
         pins = ex.sensor.record;
         ex.data{current_step}{ex.tap_number} = pins;
+        if size(pins,2) ~= 37
+            error("New tap is not same size as ref_tap")
+        end
         
         new_tap2 = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
 
@@ -171,7 +179,7 @@ for current_step = current_step+1:MAX_STEPS
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
         % tap along edge
-        for disp_from_start = -10:10 
+        for disp_from_start = -10:2:10 
             
             % move distance predicted 
             if disp_from_start < 0 
@@ -196,7 +204,7 @@ for current_step = current_step+1:MAX_STEPS
         
         % calc dissim, align to 0 (edge)
         [dissims, ys_for_real] = ex.process_taps(ex.data{current_step});
-        xs_default = [-10:10]';
+        xs_default = [-10:2:10]';
         x_min  = ex.radius_diss_shift(dissims(n_useless_taps+1:end), xs_default);
 
         xs_current_step = xs_default + x_min; % so all minima are aligned
@@ -211,7 +219,7 @@ for current_step = current_step+1:MAX_STEPS
         model.add_a_radius(ys_for_real(n_useless_taps+1:end,:), xs_current_step)
         
         % rotate hips by x_min in next phases of walking
-        turn_hips_by = round(x_min);
+        turn_hips_by = round(-x_min);
         
         
     else %(distance to edge <= tol)
@@ -222,7 +230,10 @@ for current_step = current_step+1:MAX_STEPS
     % save data to file each loop
     save(fullfile(dirPath,dirTrain,mat2str(current_step)), 'ex')
     
-    if abs(turn_hips_by) > TOL % not worth time & energy twisting if less than 2
+    if abs(turn_hips_by) < TOL % not worth time & energy twisting if less than 2
+        start_hip_rotation_command = "+00";
+        start_hip_antirotation_command= "+00";
+    else
         if turn_hips_by < 0 
             start_hip_rotation_command = "-";
             start_hip_antirotation_command = "+";
@@ -236,13 +247,13 @@ for current_step = current_step+1:MAX_STEPS
             start_hip_antirotation_command = strcat(start_hip_antirotation_command, "0");
         end
 
-        start_hip_rotation_command = strcat(start_hip_rotation_command, int2str(abs(turn_hips_by)));
+        start_hip_rotation_command = strcat(start_hip_rotation_command, int2str(abs(turn_hips_by)))
         start_hip_antirotation_command = strcat(start_hip_antirotation_command, int2str(abs(turn_hips_by)));
-    end 
-    
+
+    end
     % next walking steps ...
-    resp = writeread(ex.robot_serial,"FR_leg_side")
-    pause(1.5);
+%     resp = writeread(ex.robot_serial,"FR_leg_side")
+%     pause(1.5);
     
     command_to_send = strcat(start_hip_antirotation_command, "_BLm_rotateHip");
     resp = writeread(ex.robot_serial,command_to_send)
@@ -256,7 +267,7 @@ for current_step = current_step+1:MAX_STEPS
     resp = writeread(ex.robot_serial,command_to_send)
     pause(3);
     
-    resp = writeread(ex.robot_serial,"FR_leg_forward") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
+    resp = writeread(ex.robot_serial,"FR_leg_forward_tap") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
     pause(1.5);
 
     resp = writeread(ex.robot_serial,"FRf_body_forward")
