@@ -60,7 +60,7 @@ sensorParams =[60 ...   % Min_Threshold
                 0.3 ...    % Min_Circularity
                 0.61 ...   % Min_Convexity
                 0.22];     % Min_Inertia_Ratio
-sensor = TacTip('Exposure', -6,...
+ex.sensor = TacTip('Exposure', -6,...
             'Brightness', 225,...
             'Contrast', 225,...
             'Saturation', 0, ...
@@ -108,7 +108,7 @@ for current_step = current_step+1:MAX_STEPS
     resp = writeread(ex.robot_serial,"FR_leg_forward")%this is a tap
     pause(1.5); % give time to get there
     ex.tap_number = ex.tap_number +1;
-    pins = sensor.record;
+    pins = ex.sensor.record;
     ex.data{current_step}{ex.tap_number} = pins;
     
     % Process pins
@@ -145,7 +145,7 @@ for current_step = current_step+1:MAX_STEPS
         resp = writeread(ex.robot_serial,command_to_send)%this is a tap
         pause(3); % give time to get there
         ex.tap_number = ex.tap_number +1;
-        pins = sensor.record;
+        pins = ex.sensor.record;
         ex.data{current_step}{ex.tap_number} = pins;
         
         new_tap2 = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
@@ -187,7 +187,7 @@ for current_step = current_step+1:MAX_STEPS
             resp = writeread(ex.robot_serial,command_to_send)%this is a tap
             pause(3); % give time to get there
             ex.tap_number = ex.tap_number +1;
-            pins = sensor.record;
+            pins = ex.sensor.record;
             ex.data{current_step}{ex.tap_number} = pins;
         end
         
@@ -238,45 +238,45 @@ for current_step = current_step+1:MAX_STEPS
     end 
     
     % next walking steps ...
-    resp = writeread(robot_serial,"FR_leg_side")
+    resp = writeread(ex.robot_serial,"FR_leg_side")
     pause(1.5);
     
     command_to_send = strcat(start_hip_antirotation_command, "_BLm_rotateHip");
-    resp = writeread(robot_serial,command_to_send)
+    resp = writeread(ex.robot_serial,command_to_send)
     pause(3);
     
     command_to_send = strcat(start_hip_antirotation_command, "_BR_rotateHip");
-    resp = writeread(robot_serial,command_to_send)
+    resp = writeread(ex.robot_serial,command_to_send)
     pause(3);
     
     command_to_send = strcat(start_hip_antirotation_command, "_FLm_rotateHip");
-    resp = writeread(robot_serial,command_to_send)
+    resp = writeread(ex.robot_serial,command_to_send)
     pause(3);
     
-    resp = writeread(robot_serial,"FR_leg_forward") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
+    resp = writeread(ex.robot_serial,"FR_leg_forward") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
     pause(1.5);
 
-    resp = writeread(robot_serial,"FRf_body_forward")
+    resp = writeread(ex.robot_serial,"FRf_body_forward")
     pause(1.5);
     
-    resp = writeread(robot_serial,"BL_leg_forward")
+    resp = writeread(ex.robot_serial,"BL_leg_forward")
     pause(1.5);
 
     command_to_send = strcat(start_hip_rotation_command, "_BLs_rotateHip");
-    resp = writeread(robot_serial,command_to_send)
+    resp = writeread(ex.robot_serial,command_to_send)
     pause(1.5);
     
-    resp = writeread(robot_serial,"FL_leg_forward")
+    resp = writeread(ex.robot_serial,"FL_leg_forward")
     pause(1.5);
     
     command_to_send = strcat(start_hip_rotation_command, "_FLe_rotateHip");
-    resp = writeread(robot_serial,command_to_send)
+    resp = writeread(ex.robot_serial,command_to_send)
     pause(1.5);
     
-    resp = writeread(robot_serial,"FLf_body_forward")
+    resp = writeread(ex.robot_serial,"FLf_body_forward")
     pause(1.5);
     
-    resp = writeread(robot_serial,"BR_leg_forward")
+    resp = writeread(ex.robot_serial,"BR_leg_forward")
     pause(1.5);
     
 end %main loop
@@ -289,6 +289,6 @@ save(fullfile(dirPath,dirTrain,'all_data'))
 % close everything
 clearvars ex.robot_serial
 
-delete(sensor); 
+delete(ex.sensor); 
 
 disp("All done.")
