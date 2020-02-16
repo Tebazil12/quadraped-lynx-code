@@ -276,11 +276,11 @@ void acheivePose(String poseName, int timeToTake, int timeAllowance, bool respon
       upPose = upExtend;
       downPose = extended;
       timeToTakeTapping = 700;
-      String cmd = getLegCommand(selectedLeg, upPose, timeToTakeTapping);
-      /* Serial.println(cmd);*/SSCSerial.println(cmd);
-      delay(timeToTake + timeAllowance);
+//      String cmd = getLegCommand(selectedLeg, upPose, timeToTakeTapping);
+//      /* Serial.println(cmd);*/SSCSerial.println(cmd);
+//      delay(timeToTake + timeAllowance);
       
-      cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTakeTapping);
+      String cmd = getLegCommandHipRotate(selectedLeg, upPose, number, timeToTakeTapping);
       /* Serial.println(cmd);*/SSCSerial.println(cmd);
       delay(timeToTake + timeAllowance);
       

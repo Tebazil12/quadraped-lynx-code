@@ -25,7 +25,7 @@ sensor = TacTip('Exposure', -6,...
             
 voronoi = VoronoiTactile('resolution', 900);
 
-folder_name= strcat("H:\git\tactile-core\matlab\demos\voronoi_data\", datestr(now,'yyyy-mm-dd_HHMM'),"_tapping\");
+folder_name= strcat("H:\git\tactile-core\matlab\demos\voronoi_data\", datestr(now,'yyyy-mm-dd_HHMM'),"_tappingonbeam20\");
 mkdir(folder_name)
 
 robot_serial = serialport("COM4",9600, "Timeout", 30);
@@ -35,7 +35,7 @@ resp = writeread(robot_serial,"start_pose")
 pause(10)
 
 t=1;
-for angle_of_collection = -10:10
+for angle_of_collection = -20:20
     if angle_of_collection < 0 
         command_to_send = "-";
     else

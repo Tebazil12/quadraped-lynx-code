@@ -40,7 +40,7 @@ fprintf(info_file,'\r\nCurrent git HEAD: %s' ,current_head);
 fprintf(info_file,'\r\nCurrent branch:\r\n %s', branches);
 fprintf(info_file, '\r\nExperiment Description:\r\n');
 fprintf(info_file, '-----------------------\r\n');
-fprintf(info_file, 'Robot code online: step5, collect data at-10:10,banana\r\n');
+fprintf(info_file, 'Walking Robot code online: \r\n');
 fclose(info_file);
 
 %% turn things on
@@ -76,10 +76,13 @@ ex.sensor = TacTip('Exposure', -6,...
 
 
 %% load reference tap
-load('H:\git\quadraped-lynx-code\ref_taps\blah.mat') %TODO make file!!!
+load('H:\git\quadraped-lynx-code\ref_taps\ref_tap.mat')
 ex.ref_tap = ref_tap;
 
 %TODO make and load still_tap!
+load('H:\git\quadraped-lynx-code\ref_taps\still_tap.mat')
+% ex.still_tap = still_tap;
+ex.still_tap = still_tap*0; %% for some reason dissim profile is upside down with non 0 still_tap
 
 % NB, walking takes one still frame at bottom of tap - need to either
 % switch to raw values, or take a neutral frame to do displacements of pins
@@ -92,7 +95,7 @@ ex.ref_tap = ref_tap;
 % ex.ref_diffs_norm_max_ind = round(mean([an_index(:,:,1) an_index(:,:,2)]));
 
 %% Bootstrap 
-[model, current_step] = ex.bootstrap(); %TODO make this for walking!!!
+[model, current_step] = ex.bootstrap();
 
 %% Main loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
