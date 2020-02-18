@@ -78,7 +78,7 @@ ex.sensor = TacTip('Exposure', -6,...
 
 
 %% load reference tap
-load('H:\git\quadraped-lynx-code\ref_taps\ref_tap.mat')
+load('H:\git\quadraped-lynx-code\ref_taps\ref_tap_edge.mat')
 ex.ref_tap = ref_tap;
 
 %TODO make and load still_tap!
@@ -105,12 +105,30 @@ MAX_STEPS = 10;
 TOL = 2; % mm, tolerance of on edge/not on edge
 MAX_DISP =10;%mm, largest step can take on a predicted distance
 
+EDGE_TRACK_DISTANCE = 5;%mm? always step this far from edge, not on edge as will fall off
+
 for current_step = current_step+1:MAX_STEPS
     disp(strcat("*********Main loop: ", mat2str(current_step)))
     ex.tap_number = 0; % reset on every radius. Tapping adds 1 at start so that rest of logic works with same value
     
     % Do tap
-    resp = writeread(ex.robot_serial,"FR_leg_forward")%this is a tap
+    resp = writeread(ex.robot_serial,"FR_leg_forward")%this is NOT a tap
+    pause(1.5); % give time to get there
+    
+    % tap at offset 
+    if EDGE_TRACK_DISTANCE < 0 
+        command_to_send = "-";
+    else
+        command_to_send = "+";
+    end
+
+    if EDGE_TRACK_DISTANCE <10 && EDGE_TRACK_DISTANCE >-10
+        command_to_send = strcat(command_to_send, "0");
+    end
+
+    command_to_send = strcat(command_to_send, int2str(abs(EDGE_TRACK_DISTANCE)), "_FR_rotateHip")
+    resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+    
     pause(1.5); % give time to get there
     ex.tap_number = ex.tap_number +1;
     pins = ex.sensor.record;
@@ -134,20 +152,20 @@ for current_step = current_step+1:MAX_STEPS
     
     % Check model prediction is reasonable (don't move ridiculously large
     % distances)
-    if abs(disp_to_edge) < MAX_DISP
+    if abs(EDGE_TRACK_DISTANCE + disp_to_edge) < MAX_DISP
         
         % move distance predicted 
-        if disp_to_edge < 0 
+        if EDGE_TRACK_DISTANCE +disp_to_edge < 0 
             command_to_send = "-";
         else
             command_to_send = "+";
         end
 
-        if disp_to_edge <10 && disp_to_edge >-10
+        if EDGE_TRACK_DISTANCE +disp_to_edge <10 && EDGE_TRACK_DISTANCE +disp_to_edge >-10
             command_to_send = strcat(command_to_send, "0");
         end
 
-        command_to_send = strcat(command_to_send, int2str(abs(disp_to_edge)), "_FR_rotateHip")
+        command_to_send = strcat(command_to_send, int2str(abs(EDGE_TRACK_DISTANCE +disp_to_edge)), "_FR_rotateHip")
 
         % Do tap
         resp = writeread(ex.robot_serial,command_to_send)%this is a tap
@@ -179,7 +197,7 @@ for current_step = current_step+1:MAX_STEPS
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
         % tap along edge
-        for disp_from_start = -10:2:10 
+        for disp_from_start = -10+EDGE_TRACK_DISTANCE:2:10+EDGE_TRACK_DISTANCE 
             
             % move distance predicted 
             if disp_from_start < 0 
