@@ -1,7 +1,7 @@
 ex = Experiment; % Experiment instance for this experiment
 ex.init();
 
-load('H:\git\quadraped-lynx-code\ref_taps\ref_tap.mat')
+load('H:\git\quadraped-lynx-code\ref_taps\ref_tap_edge.mat')
 ex.ref_tap = ref_tap;
 
 %TODO make and load still_tap!

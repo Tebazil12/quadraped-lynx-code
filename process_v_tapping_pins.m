@@ -13,15 +13,16 @@ all_y =[];
         if movement>41
             break;
         end
-        if sum(movement == [26 27])
+        if sum(movement == [15 26 27])
             figure(1)
             hold on
             plot(all_pins{movement}(:,:,1), all_pins{movement}(:,:,2))
             scatter(all_pins{movement}(:,:,1), all_pins{movement}(:,:,2))
         end
-        if sum(movement == [1 2 3])
+        if sum(movement == [1 2 3 14])
             figure(3)
             scatter(all_pins{movement}(:,:,1), all_pins{movement}(:,:,2))
+            plot(all_pins{movement}(:,:,1), all_pins{movement}(:,:,2))
         end
         all_x = [all_x; all_pins{movement}(:,:,1)];
         all_y = [all_y; all_pins{movement}(:,:,2)];

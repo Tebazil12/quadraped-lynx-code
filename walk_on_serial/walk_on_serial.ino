@@ -140,7 +140,7 @@ String getLegCommand(enum legLocations legNum, enum legPoses poseNum, int timeTa
     case upSide: 
       hipAngle = -500;
       kneeAngle = 200;
-      ankleAngle = 0;
+      ankleAngle = 200; //was 0
       break;              
   }
   String comdToSend="";
@@ -200,7 +200,7 @@ String getLegCommandHipRotate(enum legLocations legNum, enum legPoses poseNum, i
     case upSide: 
       hipAngle = -500;
       kneeAngle = 200;
-      ankleAngle = 0;
+      ankleAngle = 200; //was 0
       break;              
   }
   String comdToSend="";

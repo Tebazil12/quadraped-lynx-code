@@ -73,18 +73,20 @@ ex.sensor = TacTip('Exposure', -6,...
             'MaxArea',sensorParams(4),...
             'MinCircularity',sensorParams(5), ...
             'MinConvexity',sensorParams(6), ...
-            'MinInertiaRatio',sensorParams(7));
+            'MinInertiaRatio',sensorParams(7),...
+            'maxTrackingMove', 100);
 
 
 
 %% load reference tap
-load('H:\git\quadraped-lynx-code\ref_taps\ref_tap_edge.mat')
+load('H:\git\quadraped-lynx-code\ref_taps\ref_tap_edge2.mat')
 ex.ref_tap = ref_tap;
 
 %TODO make and load still_tap!
 load('H:\git\quadraped-lynx-code\ref_taps\still_tap.mat')
 % ex.still_tap = still_tap;
 ex.still_tap = still_tap*0; %% for some reason dissim profile is upside down with non 0 still_tap
+ex.still_tap_array = [still_tap(:,:,1);still_tap(:,:,2)];
 
 % NB, walking takes one still frame at bottom of tap - need to either
 % switch to raw values, or take a neutral frame to do displacements of pins
@@ -96,20 +98,43 @@ ex.still_tap = still_tap*0; %% for some reason dissim profile is upside down wit
 % [~,an_index] = max(abs(ex.ref_diffs_norm));
 % ex.ref_diffs_norm_max_ind = round(mean([an_index(:,:,1) an_index(:,:,2)]));
 
+EDGE_TRACK_DISTANCE = -12;%mm? always step this far from edge, not on edge as will fall off
+
 %% Bootstrap 
-[model, current_step] = ex.bootstrap();
+[model, current_step] = ex.bootstrap(EDGE_TRACK_DISTANCE);
 
 %% Main loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 MAX_STEPS = 10;
-TOL = 2; % mm, tolerance of on edge/not on edge
-MAX_DISP =10;%mm, largest step can take on a predicted distance
+TOL = 3; % mm, tolerance of on edge/not on edge
+MAX_DISP =20;%mm, largest step can take on a predicted distance
 
-EDGE_TRACK_DISTANCE = 5;%mm? always step this far from edge, not on edge as will fall off
+
 
 for current_step = current_step+1:MAX_STEPS
     disp(strcat("*********Main loop: ", mat2str(current_step)))
     ex.tap_number = 0; % reset on every radius. Tapping adds 1 at start so that rest of logic works with same value
+%     ex.sensor.setPins(ex.still_tap_array);
+%     ex.sensor.trackCancel() %%%THIS DOES NOT WORK!
+%     ex.sensor.trackAsync()
+
+    %% turn sensor off and on again so tracking resets
+    ex.sensor.delete();
+    killPython; startPyroNameServer
+    ex.sensor = TacTip('Exposure', -6,...
+            'Brightness', 225,...
+            'Contrast', 225,...
+            'Saturation', 0, ...
+            'Tracking',true, ...
+            'MinThreshold',sensorParams(1),...
+            'MaxThreshold',sensorParams(2), ...
+            'MinArea',sensorParams(3), ...
+            'MaxArea',sensorParams(4),...
+            'MinCircularity',sensorParams(5), ...
+            'MinConvexity',sensorParams(6), ...
+            'MinInertiaRatio',sensorParams(7),...
+            'maxTrackingMove', 100);
+    
     
     % Do tap
     resp = writeread(ex.robot_serial,"FR_leg_forward")%this is NOT a tap
@@ -128,7 +153,8 @@ for current_step = current_step+1:MAX_STEPS
 
     command_to_send = strcat(command_to_send, int2str(abs(EDGE_TRACK_DISTANCE)), "_FR_rotateHip")
     resp = writeread(ex.robot_serial,command_to_send)%this is a tap
-    
+    disp("################### FIRST TAP #######################");
+    %ex.sensor.setPins(ex.still_tap_array);
     pause(1.5); % give time to get there
     ex.tap_number = ex.tap_number +1;
     pins = ex.sensor.record;
@@ -152,7 +178,7 @@ for current_step = current_step+1:MAX_STEPS
     
     % Check model prediction is reasonable (don't move ridiculously large
     % distances)
-    if abs(EDGE_TRACK_DISTANCE + disp_to_edge) < MAX_DISP
+    if abs(disp_to_edge) < MAX_DISP
         
         % move distance predicted 
         if EDGE_TRACK_DISTANCE +disp_to_edge < 0 
@@ -169,6 +195,8 @@ for current_step = current_step+1:MAX_STEPS
 
         % Do tap
         resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+        disp("################### SECOND TAP #######################");
+        %ex.sensor.setPins(ex.still_tap_array);
         pause(3); % give time to get there
         ex.tap_number = ex.tap_number +1;
         pins = ex.sensor.record;
@@ -193,11 +221,11 @@ for current_step = current_step+1:MAX_STEPS
     end
     
     if abs(disp_to_edge) > TOL % prediction was wrong, collect more data
-        disp("Distance was greater than tol, collecting new line")
+        disp("%%%%%%%%%% Distance was greater than tol, collecting new line %%%%%%%%")
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
         % tap along edge
-        for disp_from_start = -10+EDGE_TRACK_DISTANCE:2:10+EDGE_TRACK_DISTANCE 
+        for disp_from_start = -15+EDGE_TRACK_DISTANCE:1:15+EDGE_TRACK_DISTANCE 
             
             % move distance predicted 
             if disp_from_start < 0 
@@ -214,6 +242,7 @@ for current_step = current_step+1:MAX_STEPS
 
             % Do tap
             resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+            %ex.sensor.setPins(ex.still_tap_array);
             pause(3); % give time to get there
             ex.tap_number = ex.tap_number +1;
             pins = ex.sensor.record;
@@ -222,7 +251,7 @@ for current_step = current_step+1:MAX_STEPS
         
         % calc dissim, align to 0 (edge)
         [dissims, ys_for_real] = ex.process_taps(ex.data{current_step});
-        xs_default = [-10:2:10]';
+        xs_default = [-15:1:15]';
         x_min  = ex.radius_diss_shift(dissims(n_useless_taps+1:end), xs_default);
 
         xs_current_step = xs_default + x_min; % so all minima are aligned
@@ -272,6 +301,9 @@ for current_step = current_step+1:MAX_STEPS
     % next walking steps ...
 %     resp = writeread(ex.robot_serial,"FR_leg_side")
 %     pause(1.5);
+    command_to_send = strcat(start_hip_rotation_command, "_FR_rotateHip")
+    resp = writeread(ex.robot_serial,command_to_send)
+    pause(3);
     
     command_to_send = strcat(start_hip_antirotation_command, "_BLm_rotateHip");
     resp = writeread(ex.robot_serial,command_to_send)
@@ -285,8 +317,8 @@ for current_step = current_step+1:MAX_STEPS
     resp = writeread(ex.robot_serial,command_to_send)
     pause(3);
     
-    resp = writeread(ex.robot_serial,"FR_leg_forward_tap") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
-    pause(1.5);
+%     resp = writeread(ex.robot_serial,"FR_leg_forward_tap") % this has to be here as turning for tapping needs to happen in forward pose, so can't move from side to back in hip twist
+%     pause(1.5);
 
     resp = writeread(ex.robot_serial,"FRf_body_forward")
     pause(1.5);
