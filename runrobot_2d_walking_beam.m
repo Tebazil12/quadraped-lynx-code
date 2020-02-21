@@ -42,7 +42,7 @@ fprintf(info_file,'\r\nCurrent git HEAD: %s' ,current_head);
 fprintf(info_file,'\r\nCurrent branch:\r\n %s', branches);
 fprintf(info_file, '\r\nExperiment Description:\r\n');
 fprintf(info_file, '-----------------------\r\n');
-fprintf(info_file, 'Walking Robot code online: removed gp smoothing \r\n');
+fprintf(info_file, 'Walking Robot code online: added back gp smoothing \r\n');
 fclose(info_file);
 
 %% turn things on
@@ -56,15 +56,15 @@ pause(1.5);
 
 % startup sensor
 sensorParams =[60 ...   % Min_Threshold
-                300 ... % Max_Threshold
+                320 ... % Max_Threshold
                 100 ...  % Min_Area
-                290 ... % Max_Area
+                400 ... % Max_Area
                 0.3 ...    % Min_Circularity
                 0.61 ...   % Min_Convexity
                 0.22];     % Min_Inertia_Ratio
 ex.sensor = TacTip('Exposure', -6,...
-            'Brightness', 225,...
-            'Contrast', 225,...
+            'Brightness', 255,...
+            'Contrast', 255,...
             'Saturation', 0, ...
             'Tracking',true, ...
             'MinThreshold',sensorParams(1),...
@@ -117,13 +117,19 @@ for current_step = current_step+1:MAX_STEPS
 %     ex.sensor.setPins(ex.still_tap_array);
 %     ex.sensor.trackCancel() %%%THIS DOES NOT WORK!
 %     ex.sensor.trackAsync()
+    resp = writeread(ex.robot_serial,"FR_leg_forward_hover") %so tip can reset in neutral posisiton
+    pause(1.5);
 
     %% turn sensor off and on again so tracking resets
     ex.sensor.delete();
-    killPython; startPyroNameServer
+    killPython; 
+    
+    pause(1.5);
+    
+    startPyroNameServer
     ex.sensor = TacTip('Exposure', -6,...
-            'Brightness', 225,...
-            'Contrast', 225,...
+            'Brightness', 255,...
+            'Contrast', 255,...
             'Saturation', 0, ...
             'Tracking',true, ...
             'MinThreshold',sensorParams(1),...
@@ -137,8 +143,8 @@ for current_step = current_step+1:MAX_STEPS
     
     
     % Do tap
-    resp = writeread(ex.robot_serial,"FR_leg_forward")%this is NOT a tap
-    pause(1.5); % give time to get there
+%     resp = writeread(ex.robot_serial,"FR_leg_forward")%this is NOT a tap
+%     pause(1.5); % give time to get there
     
     % tap at offset 
     if EDGE_TRACK_DISTANCE < 0 
@@ -225,7 +231,7 @@ for current_step = current_step+1:MAX_STEPS
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
         % tap along edge
-        for disp_from_start = -15+EDGE_TRACK_DISTANCE:1:15+EDGE_TRACK_DISTANCE 
+        for disp_from_start = -5+EDGE_TRACK_DISTANCE:1:25+EDGE_TRACK_DISTANCE 
             
             % move distance predicted 
             if disp_from_start < 0 
@@ -251,7 +257,7 @@ for current_step = current_step+1:MAX_STEPS
         
         % calc dissim, align to 0 (edge)
         [dissims, ys_for_real] = ex.process_taps(ex.data{current_step});
-        xs_default = [-15:1:15]';
+        xs_default = [-5:1:25]';
         x_min  = ex.radius_diss_shift(dissims(n_useless_taps+1:end), xs_default);
 
         xs_current_step = xs_default + x_min; % so all minima are aligned
