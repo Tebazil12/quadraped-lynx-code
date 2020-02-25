@@ -105,10 +105,10 @@ EDGE_TRACK_DISTANCE = -12;%mm? always step this far from edge, not on edge as wi
 
 %% Main loop %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-MAX_STEPS = 10;
+MAX_STEPS = 35;
 TOL = 3; % mm, tolerance of on edge/not on edge
-MAX_DISP =20;%mm, largest step can take on a predicted distance
-
+MAX_DISP =15;%mm, largest step can take on a predicted distance
+TIP_RADIUS = 5;%degress?
 
 
 for current_step = current_step+1:MAX_STEPS
@@ -182,9 +182,66 @@ for current_step = current_step+1:MAX_STEPS
     turn_hips_by = round(disp_to_edge);
     disp(strcat("Predicted disp. is: ", mat2str(new_x)))
     
+    total_disp_to_edge = disp_to_edge;
+    if abs(disp_to_edge) > TIP_RADIUS && abs(disp_to_edge) < MAX_DISP
+        tries = 1;
+        while abs(disp_to_edge) > TIP_RADIUS && abs(disp_to_edge) < MAX_DISP
+            if tries >5 
+                disp("++++++++++TOO MANY TRIES, COLLECTING MORE DATA++++++++++")
+                disp_to_edge = 100;
+                break
+            end
+            disp("------------NOT WITHIN RADIUS OF TIP, MOVING CLOSER ------------------");
+            % move in by tap radius and repeat tap until it is 
+            if disp_to_edge < 0 
+                total_disp_to_edge = total_disp_to_edge - TIP_RADIUS;
+            else 
+                total_disp_to_edge = total_disp_to_edge + TIP_RADIUS;
+            end
+
+            if EDGE_TRACK_DISTANCE +total_disp_to_edge < 0 
+                command_to_send = "-";
+            else
+                command_to_send = "+";
+            end
+
+            if EDGE_TRACK_DISTANCE+total_disp_to_edge <10 && EDGE_TRACK_DISTANCE+total_disp_to_edge >-10
+                command_to_send = strcat(command_to_send, "0");
+            end
+
+            command_to_send = strcat(command_to_send, int2str(abs(EDGE_TRACK_DISTANCE+total_disp_to_edge)), "_FR_rotateHip")
+            resp = writeread(ex.robot_serial,command_to_send)%this is a tap
+            disp("################### ANOTHER TAP #######################");
+            %ex.sensor.setPins(ex.still_tap_array);
+            pause(1.5); % give time to get there
+            ex.tap_number = ex.tap_number +1;
+            pins = ex.sensor.record;
+            ex.data{current_step}{ex.tap_number} = pins;
+            if size(pins,2) ~= 37
+                error("New tap is not same size as ref_tap")
+            end
+
+            % Process pins
+            new_tap = ex.process_single_tap(ex.data{current_step}{ex.tap_number});
+
+            if ~isequal(size(new_tap), [1 size(ref_tap,2)*2])
+                warning("New tap is not the same dimensions as reference tap")
+            end
+
+            %% predict distance to edge from this tap using gplvm
+            new_x = model.predict_singletap(new_tap);
+            disp_to_edge = -new_x;
+            
+            disp(strcat("Predicted disp. is: ", mat2str(new_x)))
+            tries = tries+1;
+        end
+        disp_to_edge = total_disp_to_edge + disp_to_edge;
+        turn_hips_by = round(disp_to_edge);
+    end
+    
     % Check model prediction is reasonable (don't move ridiculously large
     % distances)
-    if abs(disp_to_edge) < MAX_DISP
+    if abs(disp_to_edge) - abs(total_disp_to_edge) < MAX_DISP 
         
         % move distance predicted 
         if EDGE_TRACK_DISTANCE +disp_to_edge < 0 
@@ -231,7 +288,7 @@ for current_step = current_step+1:MAX_STEPS
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
         % tap along edge
-        for disp_from_start = -5+EDGE_TRACK_DISTANCE:1:25+EDGE_TRACK_DISTANCE 
+        for disp_from_start = -5+EDGE_TRACK_DISTANCE+total_disp_to_edge:1:25+EDGE_TRACK_DISTANCE+total_disp_to_edge
             
             % move distance predicted 
             if disp_from_start < 0 
@@ -272,7 +329,7 @@ for current_step = current_step+1:MAX_STEPS
         model.add_a_radius(ys_for_real(n_useless_taps+1:end,:), xs_current_step)
         
         % rotate hips by x_min in next phases of walking
-        turn_hips_by = round(-x_min);
+        turn_hips_by = round(-x_min)+total_disp_to_edge;
         
         
     else %(distance to edge <= tol)

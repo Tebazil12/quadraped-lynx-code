@@ -17,13 +17,13 @@ clear all; close all; clc; %dbstop if error
 %        0.3 ...    % Min_Circularity
 %        0.61 ...   % Min_Convexity
 %        0.22];     % Min_Inertia_Ratio
-par = [60 ...   % Min_Threshold
-       300 ... % Max_Threshold
-       100 ...  % Min_Area
-       290 ... % Max_Area
-       0.3 ...    % Min_Circularity
-       0.61 ...   % Min_Convexity
-       0.22];     % Min_Inertia_Ratio
+par = [0 ...   % Min_Threshold
+       500 ... % Max_Threshold
+       50 ...  % Min_Area
+       400 ... % Max_Area
+       0.5 ...    % Min_Circularity
+       0.1 ...   % Min_Convexity
+       0.1];     % Min_Inertia_Ratio
    
 % sensor = TacTip('Exposure', -6,...
 %                 'Brightness', 150,...
