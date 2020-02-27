@@ -287,8 +287,9 @@ for current_step = current_step+1:MAX_STEPS
         disp("%%%%%%%%%% Distance was greater than tol, collecting new line %%%%%%%%")
         n_useless_taps = ex.tap_number; %so can exlude points later on
         
+        ex.search_angles = -5:1:35-EDGE_TRACK_DISTANCE;
         % tap along edge
-        for disp_from_start = -5+EDGE_TRACK_DISTANCE+total_disp_to_edge:1:25+EDGE_TRACK_DISTANCE+total_disp_to_edge
+        for disp_from_start = ex.search_angles+EDGE_TRACK_DISTANCE
             
             % move distance predicted 
             if disp_from_start < 0 
@@ -314,7 +315,7 @@ for current_step = current_step+1:MAX_STEPS
         
         % calc dissim, align to 0 (edge)
         [dissims, ys_for_real] = ex.process_taps(ex.data{current_step});
-        xs_default = [-5:1:25]';
+        xs_default = ex.search_angles';
         x_min  = ex.radius_diss_shift(dissims(n_useless_taps+1:end), xs_default);
 
         xs_current_step = xs_default + x_min; % so all minima are aligned
@@ -329,7 +330,7 @@ for current_step = current_step+1:MAX_STEPS
         model.add_a_radius(ys_for_real(n_useless_taps+1:end,:), xs_current_step)
         
         % rotate hips by x_min in next phases of walking
-        turn_hips_by = round(-x_min)+total_disp_to_edge;
+        turn_hips_by = round(-x_min);
         
         
     else %(distance to edge <= tol)
