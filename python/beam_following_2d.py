@@ -24,6 +24,7 @@
 import numpy as np
 import os
 import time
+import serial
 import json
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -32,12 +33,12 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import atexit
 
-import tactip_toolkit_dobot.experiments.min_example.common as common
+# import tactip_toolkit_dobot.experiments.min_example.common as common
 
 # import tactip_toolkit_dobot.experiments.online_learning.experiment as experiment
 
-import tactip_toolkit_dobot.experiments.online_learning.offline_setup.data_processing as dp
-import tactip_toolkit_dobot.experiments.online_learning.offline_setup.gplvm as gplvm
+# import tactip_toolkit_dobot.experiments.online_learning.offline_setup.data_processing as dp
+# import tactip_toolkit_dobot.experiments.online_learning.offline_setup.gplvm as gplvm
 
 
 np.set_printoptions(precision=2, suppress=True)
@@ -725,11 +726,24 @@ def save_final_status():
 class QuadRobot:
     # some vars
     def __init__(self):
-        pass
+        # NB, robot batteries must be switched on, even if not trying to move legs!
+        self.ser = serial.Serial('/dev/ttyUSB0', baudrate=9600)  # open serial port
+        time.sleep(1.5) # in matlab this is needed to allow serial port time to open
 
     # some setups
     # some teardowns
     #comms stuff should go here too
+    def write_read(self, msg):
+        # send msg over serial (encoding and adding appropriate line endings),
+        # then decode the response
+
+        # need to match format that matlab used
+        msg = msg + "\n"
+        encoded_msg = msg.encode("utf-8")
+        self.ser.write(encoded_msg)     # write a string
+        response = self.ser.readline().decode("utf-8") # decode removes b' \r\n' from message
+
+        return response
 
 
 def make_quad_robot():

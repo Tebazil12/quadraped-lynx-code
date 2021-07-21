@@ -27,6 +27,6 @@ print(ser.name)         # check which port was really used
 response = serial_write_read(ser, 'BR_leg_forward')
 
 
-ser.close()
+# ser.close()
 
 print(f"response was {response} of type {type(response)}")
