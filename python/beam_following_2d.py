@@ -33,12 +33,12 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import atexit
 
-# import tactip_toolkit_dobot.experiments.min_example.common as common
+import tactip_toolkit_dobot.experiments.min_example.common as common
 
 # import tactip_toolkit_dobot.experiments.online_learning.experiment as experiment
 
-# import tactip_toolkit_dobot.experiments.online_learning.offline_setup.data_processing as dp
-# import tactip_toolkit_dobot.experiments.online_learning.offline_setup.gplvm as gplvm
+import tactip_toolkit_dobot.experiments.online_learning.offline_setup.data_processing as dp
+import tactip_toolkit_dobot.experiments.online_learning.offline_setup.gplvm as gplvm
 
 
 np.set_printoptions(precision=2, suppress=True)
@@ -755,7 +755,6 @@ def main(ex, model, meta):
     # np.set_printoptions(precision=2, suppress=True)
 
     with make_quad_robot() as ex.robot, common.make_sensor(meta) as ex.sensor:
-        common.init_robot(ex.robot, meta, do_homing=False)
 
         ex.collect_neutral_tap(meta)
 
